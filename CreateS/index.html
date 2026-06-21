@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeCraft AI — Build your site by talking to it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF8F3;
+    --paper-dim:#F2EEE4;
+    --ink:#1A1B2E;
+    --ink-soft:#4A4B63;
+    --amber:#FF7A3D;
+    --amber-soft:#FFE3D1;
+    --teal:#2D9D8F;
+    --teal-soft:#DCF0EC;
+    --border:#E8E3D8;
+    --border-strong:#D8D1C0;
+    --radius:14px;
+    --shadow-sm: 0 2px 8px rgba(26,27,46,0.06);
+    --shadow-md: 0 8px 24px rgba(26,27,46,0.10);
+    --shadow-lg: 0 20px 50px rgba(26,27,46,0.14);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Plus Jakarta Sans', sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+
+  ::selection{background:var(--amber-soft); color:var(--ink);}
+
+  a{color:inherit;}
+  button{font-family:inherit;}
+
+  :focus-visible{
+    outline:2px solid var(--amber);
+    outline-offset:3px;
+    border-radius:6px;
+  }
+
+  /* ---------- Background texture ---------- */
+  .grain-bg{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background-image:
+      radial-gradient(circle at 18% 8%, rgba(255,122,61,0.07), transparent 38%),
+      radial-gradient(circle at 88% 18%, rgba(45,157,143,0.08), transparent 42%),
+      linear-gradient(var(--paper), var(--paper));
+    pointer-events:none;
+  }
+  .grid-overlay{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background-image:
+      linear-gradient(rgba(26,27,46,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,27,46,0.035) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.15) 60%, transparent 100%);
+    pointer-events:none;
+  }
+
+  .wrap{
+    position:relative;
+    z-index:1;
+    max-width:1240px;
+    margin:0 auto;
+    padding:0 32px;
+  }
+
+  /* ---------- Nav ---------- */
+  nav{
+    position:relative;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:24px 32px;
+    max-width:1240px;
+    margin:0 auto;
+  }
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+    font-size:19px;
+    letter-spacing:-0.01em;
+  }
+  .logo-mark{
+    width:34px;
+    height:34px;
+    border-radius:9px;
+    background:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--amber);
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:16px;
+    position:relative;
+    overflow:hidden;
+    transition:transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .logo:hover .logo-mark{
+    transform:rotate(-8deg) scale(1.06);
+  }
+  .logo-mark::after{
+    content:'';
+    position:absolute;
+    top:-50%; left:-50%;
+    width:200%; height:200%;
+    background:linear-gradient(115deg, transparent 40%, rgba(255,122,61,0.5) 50%, transparent 60%);
+    transform:translateX(-100%);
+    transition:transform 0.7s ease;
+  }
+  .logo:hover .logo-mark::after{ transform:translateX(100%); }
+
+  .nav-links{
+    display:flex;
+    align-items:center;
+    gap:36px;
+    font-size:14.5px;
+    font-weight:500;
+    color:var(--ink-soft);
+  }
+  .nav-links a{
+    position:relative;
+    text-decoration:none;
+    padding:4px 0;
+  }
+  .nav-links a::after{
+    content:'';
+    position:absolute;
+    left:0; bottom:-2px;
+    width:0%;
+    height:2px;
+    background:var(--amber);
+    transition:width 0.25s ease;
+  }
+  .nav-links a:hover{ color:var(--ink); }
+  .nav-links a:hover::after{ width:100%; }
+
+  .nav-cta{
+    font-size:14px;
+    font-weight:600;
+    padding:10px 20px;
+    border-radius:9px;
+    background:var(--ink);
+    color:var(--paper);
+    text-decoration:none;
+    border:1px solid var(--ink);
+    transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    display:inline-block;
+  }
+  .nav-cta:hover{
+    transform:translateY(-2px);
+    box-shadow:var(--shadow-md);
+  }
+
+  @media (max-width:760px){
+    .nav-links{ display:none; }
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    z-index:1;
+    padding:64px 0 80px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:56px;
+    align-items:center;
+  }
+  @media (max-width:980px){
+    .hero{ grid-template-columns:1fr; padding:32px 0 56px; }
+  }
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--teal);
+    background:var(--teal-soft);
+    border:1px solid rgba(45,157,143,0.25);
+    padding:6px 12px;
+    border-radius:100px;
+    margin-bottom:22px;
+    animation:fadeUp 0.7s ease both;
+  }
+  .eyebrow .dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--teal);
+    animation:pulse-dot 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse-dot{
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:0.4; transform:scale(0.7); }
+  }
+
+  h1{
+    font-size:clamp(34px, 4.6vw, 58px);
+    line-height:1.05;
+    letter-spacing:-0.02em;
+    font-weight:800;
+    margin:0 0 20px;
+    animation:fadeUp 0.7s ease 0.05s both;
+  }
+  h1 .accent{
+    color:var(--amber);
+    position:relative;
+    white-space:nowrap;
+  }
+  h1 .accent svg{
+    position:absolute;
+    left:-2%;
+    bottom:-10px;
+    width:104%;
+    height:14px;
+  }
+
+  .sub{
+    font-size:17.5px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    max-width:480px;
+    margin:0 0 34px;
+    animation:fadeUp 0.7s ease 0.1s both;
+  }
+
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(18px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* ---------- Create Your Site input (signature CTA) ---------- */
+  .builder-prompt{
+    animation:fadeUp 0.7s ease 0.15s both;
+    max-width:520px;
+  }
+  .builder-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .builder-label::before{
+    content:'>';
+    color:var(--amber);
+    font-weight:700;
+  }
+
+  .prompt-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#fff;
+    border:1.5px solid var(--border-strong);
+    border-radius:var(--radius);
+    padding:8px 8px 8px 18px;
+    box-shadow:var(--shadow-sm);
+    transition:border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .prompt-box:hover{
+    box-shadow:var(--shadow-md);
+  }
+  .prompt-box:focus-within{
+    border-color:var(--amber);
+    box-shadow:0 0 0 4px var(--amber-soft), var(--shadow-md);
+    transform:translateY(-2px);
+  }
+  .prompt-box input{
+    flex:1;
+    border:none;
+    outline:none;
+    font-family:'JetBrains Mono', monospace;
+    font-size:14.5px;
+    color:var(--ink);
+    background:transparent;
+    padding:10px 0;
+    min-width:0;
+  }
+  .prompt-box input::placeholder{
+    color:#A6A296;
+  }
+  .prompt-box .cursor-caret{
+    width:2px;
+    height:18px;
+    background:var(--amber);
+    animation:blink 1s steps(2) infinite;
+    margin-left:-6px;
+    flex-shrink:0;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .btn-create{
+    flex-shrink:0;
+    font-weight:700;
+    font-size:14.5px;
+    color:#fff;
+    background:var(--ink);
+    border:none;
+    padding:12px 22px;
+    border-radius:9px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:background 0.25s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .btn-create svg{
+    transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink:0;
+  }
+  .btn-create:hover{
+    background:var(--amber);
+    transform:translateY(-1px) scale(1.02);
+    box-shadow:0 6px 18px rgba(255,122,61,0.35);
+  }
+  .btn-create:hover svg{
+    transform:translateX(4px);
+  }
+  .btn-create:active{
+    transform:translateY(0) scale(0.98);
+  }
+
+  .builder-chips{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    background:var(--paper-dim);
+    border:1px solid var(--border);
+    padding:6px 12px;
+    border-radius:100px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .chip:hover{
+    background:var(--teal-soft);
+    border-color:var(--teal);
+    color:var(--teal);
+    transform:translateY(-2px);
+  }
+
+  .trust-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top:30px;
+    font-size:13px;
+    color:var(--ink-soft);
+    animation:fadeUp 0.7s ease 0.2s both;
+  }
+  .trust-row .avatars{
+    display:flex;
+  }
+  .trust-row .avatars span{
+    width:28px; height:28px;
+    border-radius:50%;
+    border:2px solid var(--paper);
+    margin-left:-8px;
+    display:inline-block;
+    background:linear-gradient(135deg, var(--amber), var(--teal));
+  }
+  .trust-row .avatars span:first-child{ margin-left:0; }
+
+  /* ---------- Hero mockup: animated browser building itself ---------- */
+  .mock-stage{
+    position:relative;
+    animation:fadeUp 0.8s ease 0.2s both;
+  }
+  .browser-window{
+    background:#fff;
+    border-radius:16px;
+    border:1px solid var(--border);
+    box-shadow:var(--shadow-lg);
+    overflow:hidden;
+    transform:rotate(1.2deg);
+    transition:transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .mock-stage:hover .browser-window{
+    transform:rotate(0deg) translateY(-4px);
+  }
+  .browser-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 16px;
+    background:var(--paper-dim);
+    border-bottom:1px solid var(--border);
+  }
+  .browser-bar .traffic{
+    display:flex;
+    gap:6px;
+  }
+  .browser-bar .traffic span{
+    width:10px; height:10px;
+    border-radius:50%;
+    background:var(--border-strong);
+  }
+  .browser-bar .traffic span:nth-child(1){ background:#FF7A3D; opacity:0.6; }
+  .browser-bar .traffic span:nth-child(2){ background:#2D9D8F; opacity:0.6; }
+  .browser-bar .url{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    background:#fff;
+    border-radius:6px;
+    padding:4px 10px;
+    flex:1;
+    border:1px solid var(--border);
+  }
+
+  .browser-body{
+    position:relative;
+    height:360px;
+    background:#fff;
+  }
+
+  /* code phase */
+  .code-phase{
+    position:absolute;
+    inset:0;
+    padding:22px 24px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    line-height:1.85;
+    color:var(--ink-soft);
+    background:#fff;
+    animation:codeFade 8s ease-in-out infinite;
+  }
+  .code-phase .l1{ color:#B8569C; }
+  .code-phase .l2{ color:var(--teal); }
+  .code-phase .l3{ color:var(--amber); }
+  .code-phase .tag{ color:#A6A296; }
+  .code-line{
+    overflow:hidden;
+    white-space:nowrap;
+    width:0;
+    animation:typeLine 0.6s steps(30) forwards;
+  }
+  .code-line:nth-child(1){ animation-delay:0.1s; }
+  .code-line:nth-child(2){ animation-delay:0.5s; }
+  .code-line:nth-child(3){ animation-delay:0.9s; }
+  .code-line:nth-child(4){ animation-delay:1.3s; }
+  .code-line:nth-child(5){ animation-delay:1.7s; }
+  .code-line:nth-child(6){ animation-delay:2.1s; }
+  .code-line:nth-child(7){ animation-delay:2.5s; }
+  @keyframes typeLine{
+    from{ width:0; }
+    to{ width:100%; }
+  }
+
+  @keyframes codeFade{
+    0%, 38%{ opacity:1; }
+    45%, 100%{ opacity:0; }
+  }
+
+  /* built site phase */
+  .site-phase{
+    position:absolute;
+    inset:0;
+    padding:0;
+    opacity:0;
+    animation:siteFade 8s ease-in-out infinite;
+  }
+  @keyframes siteFade{
+    0%, 44%{ opacity:0; transform:translateY(8px); }
+    52%, 92%{ opacity:1; transform:translateY(0); }
+    100%{ opacity:0; transform:translateY(8px); }
+  }
+  .site-nav{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 24px;
+    border-bottom:1px solid var(--border);
+  }
+  .site-nav .brand{
+    width:70px; height:10px;
+    background:var(--ink);
+    border-radius:3px;
+  }
+  .site-nav .links{ display:flex; gap:10px; }
+  .site-nav .links span{
+    width:34px; height:8px;
+    background:var(--border-strong);
+    border-radius:3px;
+  }
+  .site-hero{
+    padding:34px 24px;
+  }
+  .site-hero .big{
+    width:78%;
+    height:22px;
+    background:var(--ink);
+    border-radius:4px;
+    margin-bottom:12px;
+    animation:growBar 0.6s ease 0.1s both;
+  }
+  .site-hero .big2{
+    width:55%;
+    height:22px;
+    background:var(--ink);
+    border-radius:4px;
+    margin-bottom:18px;
+    animation:growBar 0.6s ease 0.25s both;
+  }
+  .site-hero .desc{
+    width:62%;
+    height:10px;
+    background:var(--border-strong);
+    border-radius:3px;
+    margin-bottom:22px;
+    animation:growBar 0.6s ease 0.4s both;
+  }
+  @keyframes growBar{
+    from{ width:0; opacity:0; }
+  }
+  .site-hero .btns{ display:flex; gap:10px; }
+  .site-hero .btns .b1{
+    width:96px; height:30px;
+    background:var(--amber);
+    border-radius:7px;
+    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.55s both;
+  }
+  .site-hero .btns .b2{
+    width:96px; height:30px;
+    border:1.5px solid var(--border-strong);
+    border-radius:7px;
+    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.65s both;
+  }
+  @keyframes popIn{
+    from{ transform:scale(0.6); opacity:0; }
+    to{ transform:scale(1); opacity:1; }
+  }
+  .site-cards{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:12px;
+    padding:0 24px 24px;
+  }
+  .site-cards .card{
+    height:70px;
+    background:var(--paper-dim);
+    border:1px solid var(--border);
+    border-radius:9px;
+    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .site-cards .card:nth-child(1){ animation-delay:0.7s; }
+  .site-cards .card:nth-child(2){ animation-delay:0.78s; }
+  .site-cards .card:nth-child(3){ animation-delay:0.86s; }
+
+  .cursor-blob{
+    position:absolute;
+    width:16px; height:16px;
+    pointer-events:none;
+    opacity:0;
+    animation:cursorMove 8s ease-in-out infinite;
+  }
+  @keyframes cursorMove{
+    0%, 40%{ opacity:0; top:300px; left:60px; }
+    48%{ opacity:1; top:200px; left:100px; }
+    60%{ opacity:1; top:120px; left:200px; }
+    75%{ opacity:1; top:230px; left:280px; }
+    90%, 100%{ opacity:0; top:230px; left:280px; }
+  }
+
+  .floating-tag{
+    position:absolute;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    font-weight:600;
+    padding:7px 13px;
+    border-radius:9px;
+    box-shadow:var(--shadow-md);
+    animation:floatY 4s ease-in-out infinite;
+  }
+  .floating-tag.t1{
+    top:-18px; right:36px;
+    background:var(--ink);
+    color:var(--teal-soft);
+    animation-delay:0s;
+  }
+  .floating-tag.t2{
+    bottom:-16px; left:18px;
+    background:#fff;
+    color:var(--amber);
+    border:1.5px solid var(--amber-soft);
+    animation-delay:1.2s;
+  }
+  @keyframes floatY{
+    0%,100%{ transform:translateY(0px); }
+    50%{ transform:translateY(-9px); }
+  }
+
+  @media (max-width:980px){
+    .browser-body{ height:320px; }
+  }
+
+  /* ---------- Logos strip ---------- */
+  .logos-strip{
+    padding:40px 0 70px;
+    border-top:1px solid var(--border);
+    position:relative;
+    z-index:1;
+  }
+  .logos-strip .label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:#A6A296;
+    text-align:center;
+    margin-bottom:26px;
+    letter-spacing:0.04em;
+  }
+  .logos-row{
+    display:flex;
+    justify-content:center;
+    gap:54px;
+    flex-wrap:wrap;
+    opacity:0.55;
+    font-weight:700;
+    font-size:16px;
+    color:var(--ink-soft);
+  }
+  .logos-row span{
+    transition:opacity 0.25s ease, transform 0.25s ease;
+    cursor:default;
+  }
+  .logos-row span:hover{
+    opacity:1;
+    transform:translateY(-2px);
+    color:var(--ink);
+  }
+
+  /* ---------- Features section ---------- */
+  .section{
+    position:relative;
+    z-index:1;
+    padding:90px 0;
+  }
+  .section-head{
+    max-width:560px;
+    margin:0 0 56px;
+  }
+  .section-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--amber);
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  .section-head h2{
+    font-size:clamp(28px, 3.2vw, 38px);
+    letter-spacing:-0.015em;
+    margin:0 0 14px;
+    font-weight:800;
+  }
+  .section-head p{
+    color:var(--ink-soft);
+    font-size:16.5px;
+    line-height:1.6;
+    margin:0;
+  }
+
+  .feature-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:22px;
+  }
+  @media (max-width:900px){
+    .feature-grid{ grid-template-columns:1fr; }
+  }
+  .feature-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:30px 26px;
+    transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s ease, border-color 0.3s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .feature-card::before{
+    content:'';
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:3px;
+    background:linear-gradient(90deg, var(--amber), var(--teal));
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform 0.35s ease;
+  }
+  .feature-card:hover{
+    transform:translateY(-6px);
+    box-shadow:var(--shadow-md);
+    border-color:transparent;
+  }
+  .feature-card:hover::before{ transform:scaleX(1); }
+  .feature-icon{
+    width:44px; height:44px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:18px;
+    transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .feature-card:hover .feature-icon{ transform:rotate(-6deg) scale(1.08); }
+  .feature-icon.amber{ background:var(--amber-soft); color:var(--amber); }
+  .feature-icon.teal{ background:var(--teal-soft); color:var(--teal); }
+  .feature-icon.ink{ background:#EDEBF5; color:var(--ink); }
+  .feature-card h3{
+    font-size:18px;
+    margin:0 0 8px;
+    font-weight:700;
+  }
+  .feature-card p{
+    font-size:14.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0;
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    position:relative;
+    z-index:1;
+    border-top:1px solid var(--border);
+    padding:40px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  @media (max-width:600px){
+    footer{ flex-direction:column; gap:12px; text-align:center; }
+  }
+
+  /* ---------- Chatbot widget ---------- */
+  .chat-launcher{
+    position:fixed;
+    bottom:28px;
+    right:28px;
+    z-index:100;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--amber);
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:var(--shadow-lg);
+    transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .chat-launcher:hover{
+    transform:scale(1.08) rotate(-4deg);
+  }
+  .chat-launcher .ping{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:2px solid var(--amber);
+    opacity:0;
+    animation:ping 2.4s ease-out infinite;
+  }
+  @keyframes ping{
+    0%{ transform:scale(0.9); opacity:0.7; }
+    80%{ transform:scale(1.5); opacity:0; }
+    100%{ opacity:0; }
+  }
+  .chat-launcher svg{ position:relative; z-index:1; transition:transform 0.25s ease; }
+  .chat-launcher.open svg.icon-chat{ display:none; }
+  .chat-launcher:not(.open) svg.icon-close{ display:none; }
+
+  .chat-panel{
+    position:fixed;
+    bottom:100px;
+    right:28px;
+    z-index:99;
+    width:360px;
+    max-width:calc(100vw - 40px);
+    height:480px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:var(--shadow-lg);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    transform:translateY(16px) scale(0.96);
+    opacity:0;
+    pointer-events:none;
+    transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s ease;
+  }
+  .chat-panel.open{
+    transform:translateY(0) scale(1);
+    opacity:1;
+    pointer-events:all;
+  }
+  .chat-head{
+    background:var(--ink);
+    color:#fff;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .chat-head .avatar{
+    width:36px; height:36px;
+    border-radius:50%;
+    background:linear-gradient(135deg, var(--amber), var(--teal));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:14px;
+    flex-shrink:0;
+  }
+  .chat-head .info b{ font-size:14.5px; display:block; }
+  .chat-head .info span{
+    font-size:12px;
+    color:var(--teal-soft);
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .chat-head .info span::before{
+    content:'';
+    width:6px; height:6px;
+    border-radius:50%;
+    background:#5BE0A8;
+    display:inline-block;
+  }
+
+  .chat-body{
+    flex:1;
+    padding:18px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    background:var(--paper-dim);
+  }
+  .msg{
+    max-width:80%;
+    padding:10px 14px;
+    border-radius:14px;
+    font-size:13.5px;
+    line-height:1.5;
+    animation:msgIn 0.3s ease both;
+  }
+  @keyframes msgIn{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .msg.bot{
+    background:#fff;
+    border:1px solid var(--border);
+    align-self:flex-start;
+    border-bottom-left-radius:4px;
+  }
+  .msg.user{
+    background:var(--ink);
+    color:#fff;
+    align-self:flex-end;
+    border-bottom-right-radius:4px;
+  }
+  .typing-dots{
+    display:flex;
+    gap:4px;
+    padding:12px 16px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:14px;
+    border-bottom-left-radius:4px;
+    align-self:flex-start;
+    width:fit-content;
+  }
+  .typing-dots span{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:#B8B4A6;
+    animation:typingBounce 1.2s ease-in-out infinite;
+  }
+  .typing-dots span:nth-child(2){ animation-delay:0.15s; }
+  .typing-dots span:nth-child(3){ animation-delay:0.3s; }
+  @keyframes typingBounce{
+    0%, 60%, 100%{ transform:translateY(0); opacity:0.5; }
+    30%{ transform:translateY(-5px); opacity:1; }
+  }
+
+  .chat-foot{
+    padding:14px;
+    border-top:1px solid var(--border);
+    background:#fff;
+    display:flex;
+    gap:8px;
+  }
+  .chat-foot input{
+    flex:1;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:13.5px;
+    font-family:inherit;
+    outline:none;
+    transition:border-color 0.2s ease;
+  }
+  .chat-foot input:focus{ border-color:var(--amber); }
+  .chat-foot button{
+    width:38px; height:38px;
+    border-radius:10px;
+    background:var(--ink);
+    color:var(--amber);
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    transition:background 0.2s ease, transform 0.2s ease;
+  }
+  .chat-foot button:hover{ background:var(--amber); color:#fff; transform:scale(1.05); }
+
+  @media (max-width:480px){
+    .chat-panel{ right:16px; left:16px; width:auto; bottom:92px; }
+    .chat-launcher{ right:16px; bottom:20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:0.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:0.001ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain-bg"></div>
+<div class="grid-overlay"></div>
+
+<nav>
+  <div class="logo">
+    <div class="logo-mark">&lt;/&gt;</div>
+    CodeCraft AI
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#chat-section">Assistant</a>
+  </div>
+  <a href="#builder" class="nav-cta">Start building</a>
+</nav>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow"><span class="dot"></span> AI WEBSITE BUILDER</div>
+      <h1>Describe it.<br>Watch it <span class="accent">build<svg viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M2,10 Q50,2 100,8 T198,6" stroke="#FF7A3D" stroke-width="4" fill="none" stroke-linecap="round"/></svg></span> itself.</h1>
+      <p class="sub">CodeCraft AI turns a few sentences into a live, working website — layout, copy, and styling, crafted in real time. No templates to wrestle with, no code to write.</p>
+
+      <div class="builder-prompt" id="builder">
+        <div class="builder-label">create-your-site.sh</div>
+        <div class="prompt-box">
+          <input type="text" id="siteInput" placeholder="A bakery site with online ordering..." aria-label="Describe the site you want to create">
+          <span class="cursor-caret" id="caret"></span>
+          <button class="btn-create" id="createBtn">
+            Create Your Site
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="builder-chips">
+          <span class="chip">Portfolio</span>
+          <span class="chip">Online store</span>
+          <span class="chip">Restaurant</span>
+          <span class="chip">SaaS landing</span>
+        </div>
+      </div>
+
+      <div class="trust-row">
+        <div class="avatars"><span></span><span></span><span></span><span></span></div>
+        Joined by 12,000+ builders crafting sites this week
+      </div>
+    </div>
+
+    <div class="mock-stage">
+      <div class="floating-tag t1">✓ Deployed in 38s</div>
+      <div class="browser-window">
+        <div class="browser-bar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="url mono">yoursite.codecraft.ai</div>
+        </div>
+        <div class="browser-body">
+          <div class="code-phase">
+            <div class="code-line"><span class="l1">const</span> site = <span class="l2">craft</span>(<span class="l3">"bakery + ordering"</span>)</div>
+            <div class="code-line"><span class="tag">&lt;Hero</span> headline=<span class="l3">"Fresh, daily."</span> <span class="tag">/&gt;</span></div>
+            <div class="code-line"><span class="tag">&lt;Nav</span> links={[<span class="l3">"Menu","Order","About"</span>]} <span class="tag">/&gt;</span></div>
+            <div class="code-line"><span class="l1">render</span>(theme: <span class="l3">"warm-light"</span>)</div>
+            <div class="code-line"><span class="l2">add</span>.section(<span class="l3">"featured-products"</span>)</div>
+            <div class="code-line"><span class="l1">deploy</span>() <span class="tag">// pushing to CDN</span></div>
+            <div class="code-line"><span class="l2">✓</span> build complete <span class="tag">— 0 errors</span></div>
+          </div>
+          <div class="site-phase">
+            <div class="site-nav">
+              <div class="brand"></div>
+              <div class="links"><span></span><span></span><span></span></div>
+            </div>
+            <div class="site-hero">
+              <div class="big"></div>
+              <div class="big2"></div>
+              <div class="desc"></div>
+              <div class="btns"><div class="b1"></div><div class="b2"></div></div>
+            </div>
+            <div class="site-cards"><div class="card"></div><div class="card"></div><div class="card"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="floating-tag t2">⚡ AI-generated</div>
+    </div>
+  </section>
+
+  <div class="logos-strip">
+    <div class="label mono">TRUSTED BY BUILDERS AT</div>
+    <div class="logos-row">
+      <span>Northwind</span>
+      <span>Lumen Labs</span>
+      <span>Forge & Co.</span>
+      <span>Pixel Bloom</span>
+      <span>Anchorpoint</span>
+    </div>
+  </div>
+
+  <section class="section" id="features">
+    <div class="section-head">
+      <div class="section-eyebrow mono">// WHY CODECRAFT</div>
+      <h2>Two ways in. One finished site.</h2>
+      <p>Type what you want and get a full site instantly, or talk it through with the assistant when you want to think out loud.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon amber">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>One-line site creation</h3>
+        <p>Drop a description into the prompt bar and CodeCraft assembles a complete, styled site — pages, sections, and copy included.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon teal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Built-in chat assistant</h3>
+        <p>Not sure what you need yet? Chat with the assistant to shape your idea, then turn the conversation straight into a working page.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon ink">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Live in under a minute</h3>
+        <p>Watch your site take shape as it's generated, then publish it with one click — no hosting setup, no waiting on a developer.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap" style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+    <span class="mono">© 2026 CodeCraft AI</span>
+    <span>Built for people who'd rather describe it than design it.</span>
+  </div>
+</footer>
+
+<!-- Chatbot widget -->
+<button class="chat-launcher" id="chatLauncher" aria-label="Open chat assistant">
+  <span class="ping"></span>
+  <svg class="icon-chat" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+  <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+</button>
+
+<div class="chat-panel" id="chatPanel" role="dialog" aria-label="CodeCraft AI assistant chat">
+  <div class="chat-head">
+    <div class="avatar">CC</div>
+    <div class="info">
+      <b>Craft Assistant</b>
+      <span>Online now</span>
+    </div>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <div class="msg bot">Hey! I'm the Craft Assistant. Tell me what kind of site you're picturing and I'll help shape it.</div>
+  </div>
+  <div class="chat-foot">
+    <input type="text" id="chatInput" placeholder="Type your message..." aria-label="Type a message">
+    <button id="chatSend" aria-label="Send message">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  // Chat launcher toggle
+  const launcher = document.getElementById('chatLauncher');
+  const panel = document.getElementById('chatPanel');
+  launcher.addEventListener('click', () => {
+    panel.classList.toggle('open');
+    launcher.classList.toggle('open');
+    if(panel.classList.contains('open')){
+      document.getElementById('chatInput').focus();
+    }
+  });
+
+  // Chat send behavior (front-end only demo logic)
+  const chatBody = document.getElementById('chatBody');
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
+
+  const botReplies = [
+    "Got it — I can sketch a layout for that. Want a single page or a few sections?",
+    "Nice. What's the main thing you want visitors to do — buy, book, or just learn more?",
+    "I can start crafting that now. Any colors or a vibe you're going for?",
+    "Good direction. I'll draft a homepage with that in mind — give me a moment."
+  ];
+  let replyIndex = 0;
+
+  function addMessage(text, sender){
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.textContent = text;
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function showTyping(){
+    const typing = document.createElement('div');
+    typing.className = 'typing-dots';
+    typing.id = 'typingIndicator';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chatBody.appendChild(typing);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function removeTyping(){
+    const t = document.getElementById('typingIndicator');
+    if(t) t.remove();
+  }
+
+  function sendChat(){
+    const val = chatInput.value.trim();
+    if(!val) return;
+    addMessage(val, 'user');
+    chatInput.value = '';
+    showTyping();
+    setTimeout(() => {
+      removeTyping();
+      addMessage(botReplies[replyIndex % botReplies.length], 'bot');
+      replyIndex++;
+    }, 1100);
+  }
+
+  chatSend.addEventListener('click', sendChat);
+  chatInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') sendChat();
+  });
+
+  // "Create Your Site" button demo behavior
+  const createBtn = document.getElementById('createBtn');
+  const siteInput = document.getElementById('siteInput');
+  const caret = document.getElementById('caret');
+
+  siteInput.addEventListener('focus', () => caret.style.display = 'none');
+  siteInput.addEventListener('blur', () => { if(!siteInput.value) caret.style.display = 'block'; });
+  siteInput.addEventListener('input', () => { caret.style.display = siteInput.value ? 'none' : 'block'; });
+
+  createBtn.addEventListener('click', () => {
+
+    const prompt = siteInput.value;
+
+    if(prompt.trim() === ""){
+        alert("Please enter a website idea.");
+        return;
+    }
+
+    localStorage.setItem("websitePrompt", prompt);
+
+    window.location.href = "website_creator.html";
+
+});
+
+  // Quick chips fill the input
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const text = chip.textContent.trim();
+      siteInput.value = 'A ' + text.toLowerCase() + ' site with...';
+      siteInput.focus();
+      caret.style.display = 'none';
+    });
+  });
+</script>
+
+</body>
+</html>
