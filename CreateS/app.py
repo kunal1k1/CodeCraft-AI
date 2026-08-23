@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from google import genai
 from dotenv import load_dotenv
@@ -19,7 +19,11 @@ CORS(app)
 
 @app.route("/")
 def home():
-    return "CodeCraft AI Backend Running!"
+    return send_from_directory(os.path.dirname(__file__), "index.html")
+
+@app.route("/website_creator.html")
+def website_creator():
+    return send_from_directory(os.path.dirname(__file__), "website_creator.html")
 
 
 @app.route("/generate", methods=["POST"])
