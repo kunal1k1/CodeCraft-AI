@@ -5,25 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeCraft AI - Website Creator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --paper: #FAFAF7;
-            --paper-raised: #FFFFFF;
-            --ink: #1A1A2E;
-            --ink-soft: #5C5C72;
-            --indigo: #5B5FEF;
-            --indigo-deep: #4347C4;
-            --mint: #00D4B5;
-            --coral: #FF6B6B;
-            --line: #E6E4DD;
-            --shadow: rgba(26, 26, 46, 0.08);
-            --radius: 16px;
+            --bg: #EDEFF1;
+            --panel: #FFFFFF;
+            --ink: #14151A;
+            --ink-soft: #63666F;
+            --line: #D8DBDF;
+            --line-soft: #E6E8EB;
+            --amber: #C9791E;
+            --amber-bg: #FBF0DF;
+            --green: #1F8F5F;
+            --editor-bg: #1B1C22;
+            --editor-line: #2B2D36;
+            --editor-text: #D9DBE3;
+            --radius: 10px;
+            --shadow: 0 1px 2px rgba(20, 21, 26, 0.05), 0 12px 28px -16px rgba(20, 21, 26, 0.18);
+            --orb-amber: #E3A455;
+            --orb-teal: #4FA8A0;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -36,359 +39,451 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: var(--paper);
+            position: relative;
+            background: var(--bg);
             background-image:
-                radial-gradient(circle at 12% 8%, rgba(91, 95, 239, 0.06), transparent 45%),
-                radial-gradient(circle at 88% 92%, rgba(0, 212, 181, 0.06), transparent 45%);
+                linear-gradient(rgba(20,21,26,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(20,21,26,0.035) 1px, transparent 1px);
+            background-size: 42px 42px;
             font-family: 'Inter', sans-serif;
             color: var(--ink);
-            padding: 56px 24px 80px;
+            padding: 48px 20px 80px;
+            overflow-x: hidden;
+        }
+
+        /* ---------- Ambient background scene ---------- */
+        /* A soft, slowly-morphing 3D-ish blob field sitting behind the
+           console. Fixed + blurred so it reads as depth/atmosphere
+           rather than a decoration competing with the UI. */
+        .scene {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            filter: blur(46px);
+            opacity: 0.5;
+            will-change: transform, border-radius;
+        }
+
+        .orb-a {
+            top: -180px;
+            right: -140px;
+            width: 480px;
+            height: 480px;
+            background:
+                radial-gradient(circle at 32% 30%, rgba(227,164,85,0.55), rgba(227,164,85,0) 65%),
+                radial-gradient(circle at 68% 72%, rgba(79,168,160,0.4), rgba(79,168,160,0) 60%);
+            animation: morphA 22s ease-in-out infinite;
+        }
+
+        .orb-b {
+            bottom: -220px;
+            left: -160px;
+            width: 420px;
+            height: 420px;
+            background:
+                radial-gradient(circle at 40% 40%, rgba(79,168,160,0.45), rgba(79,168,160,0) 62%),
+                radial-gradient(circle at 65% 65%, rgba(227,164,85,0.3), rgba(227,164,85,0) 60%);
+            animation: morphB 26s ease-in-out infinite;
+        }
+
+        .orb-c {
+            top: 38%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            opacity: 0.28;
+            background: radial-gradient(circle at 50% 50%, rgba(20,21,26,0.18), rgba(20,21,26,0) 70%);
+            animation: morphC 30s ease-in-out infinite;
+        }
+
+        @keyframes morphA {
+            0%   { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; transform: rotate(0deg) scale(1); }
+            33%  { border-radius: 60% 40% 35% 65% / 55% 65% 35% 45%; transform: rotate(8deg) scale(1.08); }
+            66%  { border-radius: 35% 65% 55% 45% / 40% 45% 55% 60%; transform: rotate(-6deg) scale(0.96); }
+            100% { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; transform: rotate(0deg) scale(1); }
+        }
+
+        @keyframes morphB {
+            0%   { border-radius: 55% 45% 40% 60% / 50% 60% 40% 50%; transform: rotate(0deg) scale(1); }
+            50%  { border-radius: 38% 62% 60% 40% / 62% 38% 62% 38%; transform: rotate(-10deg) scale(1.1); }
+            100% { border-radius: 55% 45% 40% 60% / 50% 60% 40% 50%; transform: rotate(0deg) scale(1); }
+        }
+
+        @keyframes morphC {
+            0%   { border-radius: 50%; transform: translate(-50%, -50%) scale(1); }
+            50%  { border-radius: 46% 54% 60% 40% / 55% 45% 55% 45%; transform: translate(-46%, -54%) scale(1.15); }
+            100% { border-radius: 50%; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .orb { animation: none !important; }
+        }
+
+        @media (max-width: 700px) {
+            .orb-a, .orb-b { width: 300px; height: 300px; }
+            .orb-c { display: none; }
         }
 
         /* ---------- Header ---------- */
         .page-head {
-            max-width: 760px;
-            margin: 0 auto 40px;
-            text-align: center;
-            opacity: 0;
-            animation: riseIn 0.7s ease-out forwards;
+            max-width: 720px;
+            margin: 0 auto 32px;
         }
 
         .eyebrow {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12.5px;
-            letter-spacing: 0.08em;
-            color: var(--indigo-deep);
-            background: rgba(91, 95, 239, 0.08);
-            border: 1px solid rgba(91, 95, 239, 0.18);
-            border-radius: 999px;
-            padding: 6px 14px;
-            margin-bottom: 18px;
+            font-size: 12px;
+            letter-spacing: 0.02em;
+            color: var(--ink-soft);
+            margin-bottom: 14px;
         }
 
-        .eyebrow .dot {
+        .eyebrow::before {
+            content: "";
             width: 6px;
             height: 6px;
-            border-radius: 50%;
-            background: var(--mint);
-            box-shadow: 0 0 0 0 rgba(0, 212, 181, 0.6);
-            animation: pulseDot 2s infinite;
+            background: var(--green);
+            border-radius: 1px;
         }
 
         h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
-            font-size: clamp(32px, 5vw, 48px);
-            line-height: 1.1;
-            margin: 0 0 12px;
+            font-size: clamp(24px, 3.4vw, 30px);
+            line-height: 1.25;
+            margin: 0 0 10px;
             letter-spacing: -0.01em;
         }
 
-        h1 .accent {
-            background: linear-gradient(100deg, var(--indigo) 10%, var(--mint) 90%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
+        h1 .accent { color: var(--amber); }
 
         .subhead {
-            font-size: 16px;
+            font-size: 15px;
             color: var(--ink-soft);
             margin: 0;
             line-height: 1.6;
+            max-width: 54ch;
         }
 
         /* ---------- Console card ---------- */
         .console {
-            max-width: 760px;
+            max-width: 720px;
             margin: 0 auto;
-            background: var(--paper-raised);
+            background: var(--panel);
             border: 1px solid var(--line);
             border-radius: var(--radius);
-            box-shadow: 0 1px 2px var(--shadow), 0 20px 48px -24px var(--shadow);
+            box-shadow: var(--shadow);
             overflow: hidden;
-            opacity: 0;
-            animation: riseIn 0.7s ease-out 0.12s forwards;
         }
 
         .console-bar {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 14px 18px;
+            padding: 11px 16px;
             border-bottom: 1px solid var(--line);
-            background: linear-gradient(180deg, #FCFCFA, #FAFAF7);
+            background: #FAFAFA;
         }
 
-        .console-bar .traffic {
-            display: flex;
-            gap: 7px;
-            margin-right: 8px;
-        }
-
+        .console-bar .traffic { display: flex; gap: 6px; margin-right: 6px; }
         .console-bar .traffic span {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
+            width: 9px; height: 9px; border-radius: 50%; display: inline-block;
+            background: #D8DBDF;
         }
-
-        .traffic .r { background: #FF6B6B; }
-        .traffic .y { background: #FFC857; }
-        .traffic .g { background: #00D4B5; }
 
         .console-bar .label {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12.5px;
+            font-size: 12px;
             color: var(--ink-soft);
         }
 
-        .console-body {
-            padding: 24px;
+        .console-bar .flag {
+            margin-left: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--ink-soft);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 2px 7px;
         }
+
+        .console-body { padding: 20px; }
 
         /* ---------- Textarea ---------- */
         .field-label {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 0.05em;
+            font-size: 11px;
+            letter-spacing: 0.04em;
             color: var(--ink-soft);
             text-transform: uppercase;
-            margin: 0 0 10px;
+            margin: 0 0 8px;
         }
 
         textarea#promptInput {
             width: 100%;
-            min-height: 120px;
+            min-height: 110px;
             resize: vertical;
-            font-family: 'Inter', sans-serif;
-            font-size: 15.5px;
-            line-height: 1.55;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
             color: var(--ink);
-            background: #FCFCFB;
-            border: 1.5px solid var(--line);
-            border-radius: 12px;
-            padding: 16px 18px;
+            background: #FAFAFA;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 14px 16px;
             outline: none;
-            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            transition: border-color 0.15s ease, background 0.15s ease;
         }
 
-        textarea#promptInput::placeholder {
-            color: #A8A6B8;
-        }
-
-        textarea#promptInput:hover {
-            border-color: #D4D2C8;
-        }
-
+        textarea#promptInput::placeholder { color: #A6A9B2; }
+        textarea#promptInput:hover { border-color: #C4C8CD; }
         textarea#promptInput:focus {
-            border-color: var(--indigo);
-            background: var(--paper-raised);
-            box-shadow: 0 0 0 4px rgba(91, 95, 239, 0.12);
+            border-color: var(--amber);
+            background: var(--panel);
         }
 
         /* ---------- Buttons row ---------- */
         .btn-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 18px;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
         }
 
         button {
             font-family: 'Inter', sans-serif;
             font-weight: 600;
-            font-size: 14.5px;
-            border: none;
+            font-size: 13.5px;
+            border: 1px solid transparent;
             cursor: pointer;
-            border-radius: 10px;
-            padding: 12px 20px;
-            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
-            -webkit-tap-highlight-color: transparent;
+            border-radius: 7px;
+            padding: 9px 15px;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
         }
 
-        button:focus-visible {
-            outline: 2px solid var(--indigo);
-            outline-offset: 2px;
-        }
+        button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 
-        button:active {
-            transform: translateY(1px) scale(0.99);
-        }
-
-        /* tab-style buttons */
         #previewTab, #codeTab {
-            background: #F1F0EA;
+            background: transparent;
             color: var(--ink-soft);
-            position: relative;
+            border-color: var(--line);
         }
 
-        #previewTab:hover, #codeTab:hover {
-            background: #E9E7DD;
-            color: var(--ink);
-        }
+        #previewTab:hover, #codeTab:hover { border-color: #B9BDC4; color: var(--ink); }
 
         #previewTab.active, #codeTab.active {
             background: var(--ink);
-            color: #FAFAF7;
+            color: #fff;
+            border-color: var(--ink);
         }
 
-        /* ghost / copy button */
         #copyBtn {
             background: transparent;
             color: var(--ink);
-            border: 1.5px solid var(--line);
+            border-color: var(--line);
             margin-left: auto;
         }
 
-        #copyBtn:hover {
-            border-color: var(--mint);
-            color: #00A893;
-            background: rgba(0, 212, 181, 0.06);
-        }
+        #copyBtn:hover { border-color: var(--green); color: var(--green); }
 
-        /* primary generate button — the signature element */
+        /* primary generate button */
         #generateBtn {
-            position: relative;
             color: #fff;
-            background: linear-gradient(100deg, var(--indigo), var(--indigo-deep));
-            box-shadow: 0 6px 16px -4px rgba(91, 95, 239, 0.45);
-            overflow: hidden;
-            isolation: isolate;
-            z-index: 0;
+            background: var(--amber);
+            font-family: 'JetBrains Mono', monospace;
         }
 
-        #generateBtn::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.35) 38%, rgba(255,255,255,0.35) 42%, transparent 60%);
-            background-size: 220% 100%;
-            background-position: 120% 0;
-            transition: background-position 0.6s ease;
-            z-index: 1;
-        }
-
-        #generateBtn:hover::before {
-            background-position: -20% 0;
-        }
-
-        #generateBtn:hover {
-            box-shadow: 0 8px 22px -4px rgba(91, 95, 239, 0.6);
-            transform: translateY(-1px);
-        }
+        #generateBtn:hover { background: #B36A15; }
 
         #generateBtn:disabled {
             cursor: progress;
-            opacity: 0.9;
-            transform: none;
+            background: #B36A15;
         }
 
-        #generateBtn.is-generating {
-            animation: compileGlow 1.1s ease-in-out infinite;
+        /* ---------- Build log status ---------- */
+        #statusWrap {
+            max-width: 720px;
+            margin: 12px auto 0;
         }
 
-        /* ---------- Status text ---------- */
         #statusText {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13.5px;
-            min-height: 18px;
-            margin: 18px auto 0;
-            max-width: 760px;
+            font-size: 12.5px;
+            min-height: 16px;
+            margin: 0;
             color: var(--ink-soft);
-            transition: opacity 0.3s ease;
         }
 
-        #statusText:not(:empty) {
-            animation: fadeSlide 0.35s ease-out;
+        #statusText.is-error { color: #C24040; }
+        #statusText.is-done { color: var(--green); }
+
+        #progressTrack {
+            display: none;
+            width: 100%;
+            height: 3px;
+            background: var(--line-soft);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        #progressTrack.active { display: block; }
+
+        #progressFill {
+            height: 100%;
+            width: 30%;
+            background: var(--amber);
+            border-radius: 2px;
+            animation: buildSweep 1.1s ease-in-out infinite;
+        }
+
+        @keyframes buildSweep {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(340%); }
         }
 
         hr {
             border: none;
             height: 1px;
             background: var(--line);
-            max-width: 760px;
-            margin: 28px auto;
+            max-width: 720px;
+            margin: 26px auto;
         }
 
         /* ---------- Preview / Code panels ---------- */
         #previewSection, #codeSection {
-            max-width: 760px;
+            max-width: 720px;
             margin: 0 auto;
         }
 
-        #previewSection {
-            opacity: 0;
-            animation: riseIn 0.6s ease-out 0.2s forwards;
+        .browser-chrome {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .browser-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--line);
+            background: #FAFAFA;
+        }
+
+        .browser-bar .traffic { display: flex; gap: 6px; }
+        .browser-bar .traffic span { width: 9px; height: 9px; border-radius: 50%; background: #D8DBDF; }
+
+        .browser-bar .address {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            color: var(--ink-soft);
+            background: #F0F1F3;
+            border: 1px solid var(--line-soft);
+            border-radius: 5px;
+            padding: 5px 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .browser-bar .reload {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            width: 22px;
+            text-align: center;
         }
 
         #previewFrame {
             display: block;
+            width: 100%;
+            height: 560px;
+            border: none;
             background: #fff;
-            box-shadow: 0 1px 2px var(--shadow), 0 24px 48px -28px var(--shadow);
         }
 
         #codeSection {
-            box-shadow: 0 1px 2px var(--shadow), 0 24px 48px -28px var(--shadow);
-            border: 1px solid #1e2a4a;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            overflow: hidden;
         }
 
-        #codeSection::-webkit-scrollbar {
-            width: 10px;
-        }
-        #codeSection::-webkit-scrollbar-thumb {
-            background: #2a3a5e;
-            border-radius: 6px;
-        }
-        #codeSection::-webkit-scrollbar-track {
-            background: #0f172a;
+        .editor-bar {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--editor-line);
+            border-bottom: 1px solid #33353F;
         }
 
-        /* ---------- Animations ---------- */
-        @keyframes riseIn {
-            from { opacity: 0; transform: translateY(14px); }
-            to { opacity: 1; transform: translateY(0); }
+        .editor-bar .tab {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--editor-text);
+            background: var(--editor-bg);
+            border-radius: 5px 5px 0 0;
+            padding: 5px 12px;
         }
 
-        @keyframes fadeSlide {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
+        #codeOutput {
+            display: block;
+            background: var(--editor-bg);
+            color: var(--editor-text);
+            padding: 18px 20px;
+            overflow: auto;
+            height: 560px;
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.65;
+            white-space: pre-wrap;
         }
 
-        @keyframes pulseDot {
-            0% { box-shadow: 0 0 0 0 rgba(0, 212, 181, 0.55); }
-            70% { box-shadow: 0 0 0 6px rgba(0, 212, 181, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 212, 181, 0); }
-        }
-
-        @keyframes compileGlow {
-            0%, 100% { box-shadow: 0 6px 16px -4px rgba(91, 95, 239, 0.45); }
-            50% { box-shadow: 0 6px 24px -2px rgba(91, 95, 239, 0.75); }
-        }
+        #codeSection::-webkit-scrollbar, #codeOutput::-webkit-scrollbar { width: 10px; }
+        #codeOutput::-webkit-scrollbar-thumb { background: #3A3C48; border-radius: 6px; }
+        #codeOutput::-webkit-scrollbar-track { background: var(--editor-bg); }
 
         @media (max-width: 600px) {
-            body { padding: 36px 16px 64px; }
-            .console-body { padding: 18px; }
+            body { padding: 32px 14px 64px; }
+            .console-body { padding: 16px; }
             #copyBtn { margin-left: 0; }
         }
     </style>
 </head>
 <body>
 
-<!-- Heading -->
+<div class="scene" aria-hidden="true">
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="orb orb-c"></div>
+</div>
+
 <header class="page-head">
-    <span class="eyebrow"><span class="dot"></span> AI-powered generation</span>
-    <h1>CodeCraft AI <span class="accent">Website Creator</span></h1>
-    <p class="subhead">Describe the site you're picturing. Watch CodeCraft write the HTML, CSS, and JS for it in seconds.</p>
+    <span class="eyebrow">generator online</span>
+    <h1>CodeCraft <span class="accent">Website Creator</span></h1>
+    <p class="subhead">Describe the site you're picturing. CodeCraft writes the HTML, CSS, and JS for it.</p>
 </header>
 
 <div class="console">
     <div class="console-bar">
-        <span class="traffic"><span class="r"></span><span class="y"></span><span class="g"></span></span>
-        <span class="label">prompt.txt</span>
+        <span class="traffic"><span></span><span></span><span></span></span>
+        <span class="label">~/codecraft/prompt.md</span>
+        <span class="flag">md</span>
     </div>
     <div class="console-body">
         <p class="field-label">Your prompt</p>
@@ -410,44 +505,64 @@
     </div>
 </div>
 
-<p id="statusText"></p>
+<div id="statusWrap">
+    <p id="statusText"></p>
+    <div id="progressTrack"><div id="progressFill"></div></div>
+</div>
 
 <hr>
 
 <!-- Preview Frame -->
 <div id="previewSection">
-
-    <iframe
-        id="previewFrame"
-        width="100%"
-        height="600"
-        style="
-            border:1px solid #ccc;
-            border-radius:8px;
-        ">
-    </iframe>
-
+    <div class="browser-chrome">
+        <div class="browser-bar">
+            <span class="traffic"><span></span><span></span><span></span></span>
+            <span class="address" id="previewAddress">preview://generated-site</span>
+            <span class="reload">⟳</span>
+        </div>
+        <iframe
+            id="previewFrame"
+            sandbox="allow-scripts allow-same-origin">
+        </iframe>
+    </div>
 </div>
 
-<pre
-    id="codeSection"
-    style="
-        display:none;
-        background:#0f172a;
-        color:#e2e8f0;
-        border-radius:12px;
-        padding:20px;
-        overflow:auto;
-        height:600px;
-        font-family:Consolas, monospace;
-        font-size:14px;
-        line-height:1.6;
-        white-space:pre-wrap;
-    ">
-</pre>
+<div id="codeSection" style="display:none;">
+    <div class="editor-bar"><span class="tab">index.html</span></div>
+    <pre id="codeOutput"></pre>
+</div>
 
 
 <script>
+    // Holds the last generated site's source so Copy Code works.
+    // (Declared up front so clicking Copy before Generate shows the
+    // "Generate a website first" alert instead of throwing an error.)
+    let generatedWebsite = "";
+
+    // ---- Prompt enhancement --------------------------------------------
+    // The backend/AI only sees whatever string we send as "prompt", so
+    // this is the one place on the frontend that controls how creative
+    // and well-designed the generated site turns out. Instead of sending
+    // the user's raw one-liner, we wrap it with explicit design direction
+    // so the model has to make deliberate visual choices instead of
+    // defaulting to a generic template.
+    function buildEnhancedPrompt(userPrompt) {
+        return `You are a senior web designer and frontend developer known for distinctive, modern, award-worthy websites — never generic templates.
+
+Build a complete, single-file website for this request:
+"${userPrompt}"
+
+Follow these design rules strictly:
+1. VISUAL IDENTITY — Pick one deliberate color palette (2-3 core colors + a neutral) and one deliberate mood (e.g. bold/minimal/playful/editorial) that fits the request. Avoid default Bootstrap blue-and-white.
+2. TYPOGRAPHY — Import 1-2 Google Fonts that reinforce the mood (a distinctive display font for headings + a clean readable font for body text). Use clear type scale and hierarchy.
+3. LAYOUT — Include a real structure: header/nav, a strong hero section with a clear headline and call-to-action, 3+ content sections relevant to the topic, and a footer. Use generous whitespace and alignment, not cramped default spacing.
+4. VISUAL DETAIL — Use at least some of: subtle gradients, soft shadows, rounded corners, card layouts, icons (inline SVG, no external icon libraries required), or background shapes/patterns — chosen to fit the palette and mood, not randomly.
+5. INTERACTIVITY — Add tasteful hover states, transitions, and at least one small JS-driven interaction (e.g. mobile nav toggle, smooth scroll, simple form validation, tab switching) relevant to the site's purpose.
+6. RESPONSIVENESS — Must look good from ~375px mobile width up through desktop, using flexbox/grid and media queries.
+7. CONTENT — Write real, specific placeholder copy related to the request (not "Lorem ipsum" and not "Your Company Name Here").
+8. OUTPUT FORMAT — Return ONE complete, valid HTML document: <!DOCTYPE html> through </html>, with all CSS in a <style> tag and all JS in a <script> tag, no external file references (Google Fonts <link> tags are fine). Do not include any explanation, markdown formatting, or code fences — output raw HTML only.`;
+    }
+
     document.getElementById("copyBtn").addEventListener("click", async function() {
 
     if(!generatedWebsite){
@@ -483,6 +598,44 @@ document.getElementById("codeTab").addEventListener("click", function() {
 
 });
 
+// ---- Build-log style status while the request is in flight ------------
+// Purely cosmetic: cycles a few "build step" lines and animates a thin
+// progress bar so the wait doesn't feel dead. Does not touch the actual
+// request/response handling below — it just starts before the fetch and
+// gets cleared the moment a result (or an error) comes back.
+const buildSteps = [
+    "> parsing prompt...",
+    "> drafting layout...",
+    "> writing styles...",
+    "> wiring up interactions...",
+    "> almost done..."
+];
+
+let buildLogTimer = null;
+
+function startBuildLog() {
+    const statusEl = document.getElementById("statusText");
+    const track = document.getElementById("progressTrack");
+
+    statusEl.classList.remove("is-error", "is-done");
+    track.classList.add("active");
+
+    let i = 0;
+    statusEl.innerText = buildSteps[0];
+    buildLogTimer = setInterval(function() {
+        i = (i + 1) % buildSteps.length;
+        statusEl.innerText = buildSteps[i];
+    }, 900);
+}
+
+function stopBuildLog() {
+    if (buildLogTimer) {
+        clearInterval(buildLogTimer);
+        buildLogTimer = null;
+    }
+    document.getElementById("progressTrack").classList.remove("active");
+}
+
 
 document.getElementById("generateBtn").addEventListener("click", async function() {
 
@@ -499,31 +652,42 @@ document.getElementById("generateBtn").addEventListener("click", async function(
 
     btn.innerText = "Generating...";
     btn.disabled = true;
-    btn.classList.add("is-generating");
+    startBuildLog();
 
     try {
 
         const response = await fetch(
-            "http://127.0.0.1:5000/generate",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    prompt: prompt
-                })
-            }
-        );
+    "http://127.0.0.1:5000/generate",
+    {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            prompt: buildEnhancedPrompt(prompt)
+        })
+    }
+);
 
-        const data = await response.json();
-        generatedWebsite = data.website;
+const data = await response.json();
 
-        document.getElementById("codeSection").textContent =
+if (!response.ok) {
+    throw new Error(data.error || "Backend returned an error.");
+}
+
+if (!data.website) {
+    throw new Error("Backend did not return website HTML.");
+}
+
+generatedWebsite = data.website;
+
+        document.getElementById("codeOutput").textContent =
         data.website;
 
-        document.getElementById("statusText").innerText =
-        "✅ Website generated successfully!";
+        stopBuildLog();
+        const statusEl = document.getElementById("statusText");
+        statusEl.classList.add("is-done");
+        statusEl.innerText = "✅ Website generated successfully!";
 
         document.getElementById("previewFrame").srcdoc =
         data.website;
@@ -533,17 +697,19 @@ document.getElementById("generateBtn").addEventListener("click", async function(
             data.website;
 
     } catch(error) {
+    console.error("Generation error:", error);
 
-        console.error(error);
-        document.getElementById("statusText").innerText =
-        "❌ Failed to generate website.";
-        alert("Failed to connect to backend.");
+    stopBuildLog();
+    const statusEl = document.getElementById("statusText");
+    statusEl.classList.add("is-error");
+    statusEl.innerText =
+        "❌ " + error.message;
 
-    }
+    alert("Generation failed:\n\n" + error.message);
+}
 
     btn.innerText = "Generate Website";
     btn.disabled = false;
-    btn.classList.remove("is-generating");
 
 });
 
